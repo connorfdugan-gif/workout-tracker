@@ -586,6 +586,111 @@
         .sign-out-btn:active {
             background: var(--surface-hover);
         }
+
+        .workout-history {
+            margin-top: 20px;
+        }
+
+        .history-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .history-date {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .history-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-btn.edit:active {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+        }
+
+        .history-btn.delete:active {
+            background: #ff4d4d;
+            color: white;
+            border-color: #ff4d4d;
+        }
+
+        .history-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .history-stat {
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .history-stat span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .history-sets {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        .view-history-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+
+        .view-history-btn:active {
+            background: var(--surface-hover);
+        }
+
+        .history-empty {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-dim);
+            font-size: 14px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -640,7 +745,9 @@
             </div>
             <div class="last-reference" id="lastReference"></div>
             <div class="sets-container" id="setsContainer"></div>
-            <button class="save-btn" onclick="saveWorkout()">Save Workout</button>
+            <button class="save-btn" onclick="saveWorkout()" id="saveBtn">Save Workout</button>
+            <button class="view-history-btn" onclick="toggleHistory()">View History</button>
+            <div class="workout-history" id="workoutHistory" style="display: none;"></div>
         </div>
     </div>
 
@@ -678,9 +785,10 @@
         let googleAccessToken = null;
         let driveFileId = null;
         const DRIVE_FILENAME = 'workout_tracker_data.json';
+        let editingWorkoutIndex = null;
 
         // Google OAuth2 configuration
-        const CLIENT_ID = '256828609249-3encedcb37f6hc3ol1qi9v5morf8jdnp.apps.googleusercontent.com'; // Users will need to replace this
+        const CLIENT_ID = 'YOUR_CLIENT_ID'; // Users will need to replace this
         const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
         // Check if user needs to sign in
@@ -1009,7 +1117,9 @@
 
         async function openLogModal(muscle, exercise) {
             currentExercise = { muscle, exercise };
+            editingWorkoutIndex = null;
             document.getElementById('modalTitle').textContent = exercise;
+            document.getElementById('saveBtn').textContent = 'Save Workout';
             
             const lastWorkout = await getLastWorkout(muscle, exercise);
             const lastRef = document.getElementById('lastReference');
@@ -1018,7 +1128,7 @@
                 lastRef.innerHTML = `
                     <div class="last-reference-title">Last Workout</div>
                     <div class="last-reference-value">
-                        ${lastWorkout.avgWeight.toFixed(1)} lbs × ${lastWorkout.avgReps.toFixed(1)} reps (${lastWorkout.sets} sets) • ${lastWorkout.date}
+                        ${lastWorkout.avgWeight.toFixed(1)} lbs × ${lastWorkout.avgReps.toFixed(1)} reps (${lastWorkout.sets.length} sets) • ${lastWorkout.date}
                     </div>
                 `;
             } else {
@@ -1043,11 +1153,116 @@
                 </div>
             `).join('');
 
+            document.getElementById('workoutHistory').style.display = 'none';
             document.getElementById('logModal').classList.add('show');
+        }
+
+        async function toggleHistory() {
+            const historyDiv = document.getElementById('workoutHistory');
+            const isVisible = historyDiv.style.display !== 'none';
+            
+            if (isVisible) {
+                historyDiv.style.display = 'none';
+            } else {
+                await renderWorkoutHistory();
+                historyDiv.style.display = 'block';
+            }
+        }
+
+        async function renderWorkoutHistory() {
+            const workouts = await getAllWorkouts(currentExercise.muscle, currentExercise.exercise);
+            const historyDiv = document.getElementById('workoutHistory');
+            
+            if (workouts.length === 0) {
+                historyDiv.innerHTML = '<div class="history-empty">No workout history yet</div>';
+                return;
+            }
+            
+            // Show most recent first
+            const reversedWorkouts = [...workouts].reverse();
+            
+            historyDiv.innerHTML = reversedWorkouts.map((workout, index) => {
+                const actualIndex = workouts.length - 1 - index;
+                const setsDisplay = workout.sets.map((set, i) => 
+                    `Set ${i + 1}: ${set.weight} lbs × ${set.reps} reps`
+                ).join(', ');
+                
+                return `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <div class="history-date">${workout.date}</div>
+                            <div class="history-actions">
+                                <button class="history-btn edit" onclick="editWorkout(${actualIndex})">Edit</button>
+                                <button class="history-btn delete" onclick="deleteWorkout(${actualIndex})">Delete</button>
+                            </div>
+                        </div>
+                        <div class="history-stats">
+                            <div class="history-stat">Avg Weight: <span>${workout.avgWeight.toFixed(1)} lbs</span></div>
+                            <div class="history-stat">Avg Reps: <span>${workout.avgReps.toFixed(1)}</span></div>
+                            <div class="history-stat">Volume: <span>${workout.volume.toFixed(0)}</span></div>
+                            <div class="history-stat">Sets: <span>${workout.sets.length}</span></div>
+                        </div>
+                        <div class="history-sets">${setsDisplay}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function editWorkout(index) {
+            editingWorkoutIndex = index;
+            const workouts = await getAllWorkouts(currentExercise.muscle, currentExercise.exercise);
+            const workout = workouts[index];
+            
+            // Fill in the form with existing data
+            workout.sets.forEach((set, i) => {
+                if (i < 4) {
+                    document.getElementById(`weight${i}`).value = set.weight;
+                    document.getElementById(`reps${i}`).value = set.reps;
+                }
+            });
+            
+            // Clear remaining inputs
+            for (let i = workout.sets.length; i < 4; i++) {
+                document.getElementById(`weight${i}`).value = '';
+                document.getElementById(`reps${i}`).value = '';
+            }
+            
+            // Change button text
+            document.getElementById('saveBtn').textContent = 'Update Workout';
+            
+            // Hide history
+            document.getElementById('workoutHistory').style.display = 'none';
+            
+            // Scroll to top of modal
+            document.querySelector('.modal-content').scrollTop = 0;
+        }
+
+        async function deleteWorkout(index) {
+            if (!confirm('Are you sure you want to delete this workout?')) {
+                return;
+            }
+            
+            const workouts = await getAllWorkouts(currentExercise.muscle, currentExercise.exercise);
+            workouts.splice(index, 1);
+            
+            const key = `workout:${currentExercise.muscle}:${currentExercise.exercise}`;
+            await storageSet(key, JSON.stringify(workouts));
+            
+            // Sync to Drive
+            if (googleAccessToken) {
+                syncWithDrive();
+            }
+            
+            // Refresh history and exercise list
+            await renderWorkoutHistory();
+            renderExercises();
         }
 
         function closeModal() {
             document.getElementById('logModal').classList.remove('show');
+            editingWorkoutIndex = null;
+            document.getElementById('saveBtn').textContent = 'Save Workout';
+            document.getElementById('workoutHistory').style.display = 'none';
         }
 
         async function saveWorkout() {
@@ -1080,12 +1295,32 @@
                     volume: volume
                 };
 
-                const lastWorkout = await getLastWorkout(currentExercise.muscle, currentExercise.exercise);
-                
-                await saveWorkoutData(workout);
+                if (editingWorkoutIndex !== null) {
+                    // Update existing workout
+                    const workouts = await getAllWorkouts(currentExercise.muscle, currentExercise.exercise);
+                    
+                    // Keep the original date when editing
+                    workout.date = workouts[editingWorkoutIndex].date;
+                    workouts[editingWorkoutIndex] = workout;
+                    
+                    const key = `workout:${currentExercise.muscle}:${currentExercise.exercise}`;
+                    await storageSet(key, JSON.stringify(workouts));
+                    
+                    editingWorkoutIndex = null;
+                } else {
+                    // Save new workout
+                    const lastWorkout = await getLastWorkout(currentExercise.muscle, currentExercise.exercise);
+                    
+                    await saveWorkoutData(workout);
 
-                if (lastWorkout && volume > lastWorkout.volume) {
-                    showPRCelebration();
+                    if (lastWorkout && volume > lastWorkout.volume) {
+                        showPRCelebration();
+                    }
+                }
+
+                // Sync to Drive
+                if (googleAccessToken) {
+                    syncWithDrive();
                 }
 
                 closeModal();
