@@ -20,8 +20,8 @@
             --surface-hover: #252525;
             --text: #ffffff;
             --text-dim: #a0a0a0;
-            --accent: #00ff88;
-            --accent-dim: #00cc6a;
+            --accent: #7DF9FF;
+            --accent-dim: #5dd7df;
             --border: #333;
             --chest: #ff4d6d;
             --back: #4d9fff;
@@ -691,11 +691,192 @@
             font-size: 14px;
             font-style: italic;
         }
+
+        .add-set-btn {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .add-set-btn:active {
+            background: var(--surface-hover);
+            border-color: var(--accent);
+        }
+
+        .remove-set-btn {
+            background: transparent;
+            border: 1px solid #ff4d4d;
+            color: #ff4d4d;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: all 0.2s;
+        }
+
+        .remove-set-btn:active {
+            background: #ff4d4d;
+            color: white;
+        }
+
+        .manage-exercises-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 12px;
+            transition: all 0.2s;
+        }
+
+        .manage-exercises-btn:active {
+            background: var(--surface-hover);
+        }
+
+        .add-exercise-section {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .add-exercise-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .add-exercise-input {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            color: var(--text);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .add-exercise-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .add-exercise-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-exercise-btn:active {
+            background: var(--accent-dim);
+            transform: scale(0.98);
+        }
+
+        .custom-exercise-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .custom-exercise-name {
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .delete-exercise-btn {
+            background: transparent;
+            border: 1px solid #ff4d4d;
+            color: #ff4d4d;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .delete-exercise-btn:active {
+            background: #ff4d4d;
+            color: white;
+        }
+
+        .manage-screen {
+            padding: 20px;
+        }
+
+        .manage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .manage-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .back-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .back-btn:active {
+            background: var(--surface-hover);
+        }
+
+        .muscle-group-section {
+            margin-bottom: 30px;
+        }
+
+        .muscle-group-header {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>WORKOUT TRACKER</h1>
+        <button class="manage-exercises-btn" onclick="switchScreen('manage')">Manage Exercises</button>
         <button class="sign-out-btn" id="signOutBtn" style="display: none;" onclick="signOut()">Sign Out</button>
     </div>
 
@@ -736,6 +917,17 @@
         </div>
     </div>
 
+    <!-- Manage Exercises Screen -->
+    <div id="manageScreen" class="screen">
+        <div class="manage-screen">
+            <div class="manage-header">
+                <div class="manage-title">Manage Exercises</div>
+                <button class="back-btn" onclick="switchScreen('log')">← Back</button>
+            </div>
+            <div id="manageExercisesList"></div>
+        </div>
+    </div>
+
     <!-- Log Workout Modal -->
     <div id="logModal" class="modal">
         <div class="modal-content">
@@ -764,7 +956,7 @@
     </div>
 
     <script>
-        const exercises = {
+        const defaultExercises = {
             'Chest': ['Bench Press', 'Smithing Machine Bench Press', 'Incline Bench Press', 
                       'Incline Smithing Machine Bench Press', 'Dumbbell Bench Press', 
                       'Incline Dumbbell Bench Press', 'Pec Deck'],
@@ -778,6 +970,8 @@
                           'Cable Lateral Raises', 'Overhead Press']
         };
 
+        let exercises = JSON.parse(JSON.stringify(defaultExercises)); // Deep copy
+
         let currentMuscle = 'Chest';
         let currentExercise = null;
         let chart = null;
@@ -786,9 +980,10 @@
         let driveFileId = null;
         const DRIVE_FILENAME = 'workout_tracker_data.json';
         let editingWorkoutIndex = null;
+        let currentSetCount = 3;
 
         // Google OAuth2 configuration
-        const CLIENT_ID = '256828609249-3encedcb37f6hc3ol1qi9v5morf8jdnp.apps.googleusercontent.com'; // Users will need to replace this
+        const CLIENT_ID = 'YOUR_CLIENT_ID'; // Users will need to replace this
         const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
         // Check if user needs to sign in
@@ -899,6 +1094,12 @@
                             allData[key] = data;
                         }
                     }
+                }
+                
+                // Include custom exercises
+                const customExercisesData = localStorage.getItem('custom_exercises');
+                if (customExercisesData) {
+                    allData['custom_exercises'] = customExercisesData;
                 }
                 
                 const dataToSync = JSON.stringify(allData);
@@ -1068,6 +1269,9 @@
             
             await checkStorage();
             
+            // Load custom exercises
+            await loadCustomExercises();
+            
             // If authenticated, sync data from Drive
             if (isAuthenticated && googleAccessToken) {
                 await syncWithDrive();
@@ -1076,6 +1280,42 @@
             renderTabs();
             renderExercises();
             initProgressScreen();
+        }
+
+        // Load custom exercises from storage
+        async function loadCustomExercises() {
+            try {
+                const result = await storageGet('custom_exercises');
+                if (result && result.value) {
+                    const customExercises = JSON.parse(result.value);
+                    // Merge custom exercises with defaults
+                    exercises = JSON.parse(JSON.stringify(defaultExercises));
+                    for (const [muscle, exerciseList] of Object.entries(customExercises)) {
+                        if (exercises[muscle]) {
+                            exercises[muscle] = [...exercises[muscle], ...exerciseList];
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('No custom exercises found');
+            }
+        }
+
+        // Save custom exercises
+        async function saveCustomExercises() {
+            const customExercises = {};
+            for (const [muscle, exerciseList] of Object.entries(exercises)) {
+                const customOnes = exerciseList.filter(ex => !defaultExercises[muscle].includes(ex));
+                if (customOnes.length > 0) {
+                    customExercises[muscle] = customOnes;
+                }
+            }
+            await storageSet('custom_exercises', JSON.stringify(customExercises));
+            
+            // Sync to Drive
+            if (googleAccessToken) {
+                syncWithDrive();
+            }
         }
 
         function renderTabs() {
@@ -1118,6 +1358,7 @@
         async function openLogModal(muscle, exercise) {
             currentExercise = { muscle, exercise };
             editingWorkoutIndex = null;
+            currentSetCount = 3;
             document.getElementById('modalTitle').textContent = exercise;
             document.getElementById('saveBtn').textContent = 'Save Workout';
             
@@ -1138,9 +1379,16 @@
                 `;
             }
 
+            renderSetInputs();
+
+            document.getElementById('workoutHistory').style.display = 'none';
+            document.getElementById('logModal').classList.add('show');
+        }
+
+        function renderSetInputs() {
             const setsContainer = document.getElementById('setsContainer');
-            setsContainer.innerHTML = Array.from({length: 4}, (_, i) => `
-                <div class="set-row">
+            setsContainer.innerHTML = Array.from({length: currentSetCount}, (_, i) => `
+                <div class="set-row" id="setRow${i}">
                     <div class="set-label">Set ${i + 1}</div>
                     <div class="input-group">
                         <div class="input-label">Weight (lbs)</div>
@@ -1153,8 +1401,18 @@
                 </div>
             `).join('');
 
-            document.getElementById('workoutHistory').style.display = 'none';
-            document.getElementById('logModal').classList.add('show');
+            setsContainer.innerHTML += `
+                <button class="add-set-btn" onclick="addSet()">+ Add Set</button>
+            `;
+        }
+
+        function addSet() {
+            if (currentSetCount >= 10) {
+                alert('Maximum 10 sets allowed');
+                return;
+            }
+            currentSetCount++;
+            renderSetInputs();
         }
 
         async function toggleHistory() {
@@ -1213,19 +1471,15 @@
             const workouts = await getAllWorkouts(currentExercise.muscle, currentExercise.exercise);
             const workout = workouts[index];
             
+            // Set the number of sets to match the workout being edited
+            currentSetCount = workout.sets.length;
+            renderSetInputs();
+            
             // Fill in the form with existing data
             workout.sets.forEach((set, i) => {
-                if (i < 4) {
-                    document.getElementById(`weight${i}`).value = set.weight;
-                    document.getElementById(`reps${i}`).value = set.reps;
-                }
+                document.getElementById(`weight${i}`).value = set.weight;
+                document.getElementById(`reps${i}`).value = set.reps;
             });
-            
-            // Clear remaining inputs
-            for (let i = workout.sets.length; i < 4; i++) {
-                document.getElementById(`weight${i}`).value = '';
-                document.getElementById(`reps${i}`).value = '';
-            }
             
             // Change button text
             document.getElementById('saveBtn').textContent = 'Update Workout';
@@ -1261,6 +1515,7 @@
         function closeModal() {
             document.getElementById('logModal').classList.remove('show');
             editingWorkoutIndex = null;
+            currentSetCount = 3;
             document.getElementById('saveBtn').textContent = 'Save Workout';
             document.getElementById('workoutHistory').style.display = 'none';
         }
@@ -1268,11 +1523,15 @@
         async function saveWorkout() {
             try {
                 const sets = [];
-                for (let i = 0; i < 4; i++) {
-                    const weight = parseFloat(document.getElementById(`weight${i}`).value);
-                    const reps = parseFloat(document.getElementById(`reps${i}`).value);
-                    if (weight && reps) {
-                        sets.push({ weight, reps });
+                for (let i = 0; i < currentSetCount; i++) {
+                    const weightInput = document.getElementById(`weight${i}`);
+                    const repsInput = document.getElementById(`reps${i}`);
+                    if (weightInput && repsInput) {
+                        const weight = parseFloat(weightInput.value);
+                        const reps = parseFloat(repsInput.value);
+                        if (weight && reps) {
+                            sets.push({ weight, reps });
+                        }
                     }
                 }
 
@@ -1404,7 +1663,103 @@
                 document.getElementById('progressScreen').classList.add('active');
                 document.querySelectorAll('.nav-btn')[1].classList.add('active');
                 updateProgressChart();
+            } else if (screen === 'manage') {
+                document.getElementById('manageScreen').classList.add('active');
+                renderManageExercises();
             }
+        }
+
+        function renderManageExercises() {
+            const container = document.getElementById('manageExercisesList');
+            let html = '';
+            
+            for (const [muscle, exerciseList] of Object.entries(exercises)) {
+                html += `
+                    <div class="muscle-group-section">
+                        <div class="muscle-group-header">${muscle}</div>
+                        <div class="add-exercise-section">
+                            <div class="add-exercise-title">Add New Exercise</div>
+                            <input type="text" class="add-exercise-input" id="newExercise_${muscle}" placeholder="Enter exercise name...">
+                            <button class="add-exercise-btn" onclick="addExercise('${muscle}')">+ Add Exercise</button>
+                        </div>
+                `;
+                
+                // Show custom exercises only (ones not in default list)
+                const customExercises = exerciseList.filter(ex => !defaultExercises[muscle].includes(ex));
+                if (customExercises.length > 0) {
+                    html += '<div style="margin-top: 12px;">';
+                    customExercises.forEach(exercise => {
+                        html += `
+                            <div class="custom-exercise-item">
+                                <div class="custom-exercise-name">${exercise}</div>
+                                <button class="delete-exercise-btn" onclick="deleteExercise('${muscle}', '${exercise}')">Delete</button>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        async function addExercise(muscle) {
+            const input = document.getElementById(`newExercise_${muscle}`);
+            const exerciseName = input.value.trim();
+            
+            if (!exerciseName) {
+                alert('Please enter an exercise name');
+                return;
+            }
+            
+            if (exercises[muscle].includes(exerciseName)) {
+                alert('This exercise already exists');
+                return;
+            }
+            
+            exercises[muscle].push(exerciseName);
+            await saveCustomExercises();
+            
+            input.value = '';
+            renderManageExercises();
+            renderTabs();
+            renderExercises();
+            
+            // Update progress screen dropdowns
+            updateExerciseSelect();
+        }
+
+        async function deleteExercise(muscle, exercise) {
+            if (!confirm(`Delete "${exercise}"? This will also delete all workout history for this exercise.`)) {
+                return;
+            }
+            
+            // Remove from exercises list
+            exercises[muscle] = exercises[muscle].filter(ex => ex !== exercise);
+            await saveCustomExercises();
+            
+            // Delete workout data
+            const key = `workout:${muscle}:${exercise}`;
+            try {
+                if (storageAvailable) {
+                    await window.storage.delete(key);
+                } else {
+                    localStorage.removeItem(key);
+                }
+            } catch (e) {
+                console.log('No data to delete');
+            }
+            
+            // Sync to Drive
+            if (googleAccessToken) {
+                syncWithDrive();
+            }
+            
+            renderManageExercises();
+            renderExercises();
+            updateExerciseSelect();
         }
 
         function initProgressScreen() {
